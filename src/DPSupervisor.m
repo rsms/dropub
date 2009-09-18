@@ -4,14 +4,24 @@
 
 @implementation DPSupervisor
 
-@synthesize app, filesInTransit, delegate;
+@synthesize app, filesInTransit, delegate, conf;
 
-- (id)initWithApp:(DPAppDelegate *)x directory:(NSString *)d {
+- (id)initWithApp:(DPAppDelegate *)x conf:(NSDictionary *)c {
 	self = [super init];
 	app = x;
-	qdir = d;
+	conf = c;
+	qdir = [[conf objectForKey:@"localpath"] stringByStandardizingPath];
 	fm = [NSFileManager defaultManager];
+	currentSendOperations = [NSMutableArray array];
 	return self;
+}
+
+
+- (void)cancel {
+	for (NSOperation *op in currentSendOperations) {
+		[op cancel];
+	}
+	[super cancel];
 }
 
 
@@ -41,25 +51,33 @@
 	}
 	
 	[self setPath:path inTransit:YES];
-	op = [[DPSendFileOp alloc] initWithPath:path name:name];
+	op = [[DPSendFileOp alloc] initWithPath:path name:name conf:conf];
 	op.delegate = self;
+	[currentSendOperations addObject:op];
 	[g_opq addOperation:op];
 }
 
 
-- (void)fileTransmissionDidFailForPath:(NSString *)path {
+- (void)fileTransmission:(DPSendFileOp *)op didFailForPath:(NSString *)path {
+	[currentSendOperations removeObject:op];
 	[self setPath:path inTransit:NO];
 	// leave it and let's try again
 }
 
 
-- (void)fileTransmissionDidSucceedForPath:(NSString *)path {
+- (void)fileTransmission:(DPSendFileOp *)op didSucceedForPath:(NSString *)path {
+	[currentSendOperations removeObject:op];
 	// we're safe to rm the file
 	if (![self trashOrRemoveFileAtPath:path]) {
 		NSLog(@"failed to remove %@! -- terminating since somethings seriously fucked up", path);
 		[NSApp terminate:self];
 	}
 	[self setPath:path inTransit:NO];
+}
+
+
+- (void)fileTransmission:(DPSendFileOp *)op didAbortForPath:(NSString *)path {
+	[currentSendOperations removeObject:op];
 }
 
 
@@ -99,6 +117,8 @@
 		sleep(1);
 	}
 	NSLog(@"%@ cancelled", self);
+	if (delegate && [delegate respondsToSelector:@selector(supervisorDidExit:)])
+		[delegate supervisedFilesInTransitDidChange:self];
 }
 
 

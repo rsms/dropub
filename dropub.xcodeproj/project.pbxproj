@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		3A1504AE10618DDF00263983 /* DPAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A1504AD10618DDF00263983 /* DPAppDelegate.m */; };
+		3A5DB2781062C89000B5F45F /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3A5DB2771062C89000B5F45F /* MainMenu.xib */; };
 		3A9D29D1106194D3008923FD /* DPSupervisor.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A9D29D0106194D3008923FD /* DPSupervisor.m */; };
 		3A9D29E110619EC9008923FD /* DPSendFileOp.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A9D29E010619EC9008923FD /* DPSendFileOp.m */; };
 		3A9D2A5E1061B083008923FD /* status-item-standby.png in Resources */ = {isa = PBXBuildFile; fileRef = 3A9D2A5B1061B083008923FD /* status-item-standby.png */; };
@@ -27,6 +28,7 @@
 		32CA4F630368D1EE00C91783 /* prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = prefix.pch; path = src/prefix.pch; sourceTree = "<group>"; };
 		3A1504AC10618DDF00263983 /* DPAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPAppDelegate.h; path = src/DPAppDelegate.h; sourceTree = "<group>"; };
 		3A1504AD10618DDF00263983 /* DPAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPAppDelegate.m; path = src/DPAppDelegate.m; sourceTree = "<group>"; };
+		3A5DB2771062C89000B5F45F /* MainMenu.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = MainMenu.xib; path = resources/MainMenu.xib; sourceTree = "<group>"; };
 		3A9D29CF106194D3008923FD /* DPSupervisor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPSupervisor.h; path = src/DPSupervisor.h; sourceTree = "<group>"; };
 		3A9D29D0106194D3008923FD /* DPSupervisor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPSupervisor.m; path = src/DPSupervisor.m; sourceTree = "<group>"; };
 		3A9D29DF10619EC9008923FD /* DPSendFileOp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPSendFileOp.h; path = src/DPSendFileOp.h; sourceTree = "<group>"; };
@@ -113,6 +115,7 @@
 				3A9D2A5C1061B083008923FD /* status-item-sending.png */,
 				3A9D2A5D1061B083008923FD /* status-item-selected.png */,
 				8D1107310486CEB800E47090 /* Info.plist */,
+				3A5DB2771062C89000B5F45F /* MainMenu.xib */,
 			);
 			name = resources;
 			sourceTree = "<group>";
@@ -172,6 +175,7 @@
 				3A9D2A5E1061B083008923FD /* status-item-standby.png in Resources */,
 				3A9D2A5F1061B083008923FD /* status-item-sending.png in Resources */,
 				3A9D2A601061B083008923FD /* status-item-selected.png in Resources */,
+				3A5DB2781062C89000B5F45F /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

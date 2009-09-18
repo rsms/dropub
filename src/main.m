@@ -2,12 +2,10 @@
 
 NSOperationQueue *g_opq;
 
-int main(int argc, char *argv[]) {
-	NSApplication *app = [NSApplication sharedApplication];
+int main(int argc, const char *argv[]) {
 	g_opq = [[NSOperationQueue alloc] init];
-	DPAppDelegate *appDelegate = [[DPAppDelegate alloc] init];
-	[app setDelegate:appDelegate];
-	[app run];
+	
+	NSApplicationMain(argc, argv);
 	
 	[g_opq cancelAllOperations];
 	NSArray *ops = g_opq.operations;
