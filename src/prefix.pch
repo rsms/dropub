@@ -8,10 +8,14 @@
 extern NSOperationQueue *g_opq;
 extern NSString *DPToolbarFoldersItemIdentifier;
 extern NSString *DPToolbarSettingsItemIdentifier;
+extern NSString *DPErrorDomain;
 
 #import "NSArray+DPAdditions.h"
 #import "NSDictionary+DPAdditions.h"
 #import "NSMutableDictionary+DPAdditions.h"
 #import "NSWindow+DPAdditions.h"
+#import "NSError+DPAdditions.h"
+#import "NSTask+DPAdditions.h"
+#import "NSString+DPAdditions.h"
 
 #endif

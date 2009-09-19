@@ -58,13 +58,6 @@
 }
 
 
-- (void)fileTransmission:(DPSendFileOp *)op didFailForPath:(NSString *)path {
-	[currentSendOperations removeObject:op];
-	[self setPath:path inTransit:NO];
-	// leave it and let's try again
-}
-
-
 - (void)fileTransmission:(DPSendFileOp *)op didSucceedForPath:(NSString *)path {
 	[currentSendOperations removeObject:op];
 	// we're safe to rm the file
@@ -79,6 +72,22 @@
 
 - (void)fileTransmission:(DPSendFileOp *)op didAbortForPath:(NSString *)path {
 	[currentSendOperations removeObject:op];
+	[self setPath:path inTransit:NO];
+}
+
+
+- (void)fileTransmission:(DPSendFileOp *)op didFailForPath:(NSString *)path reason:(NSError *)reason {
+	[currentSendOperations removeObject:op];
+	[self setPath:path inTransit:NO];
+	NSLog(@"[%@] failed to send %@ -- reason: %@", self, path, reason);
+	// leave it and let's try again (if <path> still exists)
+	
+	// Note: Really try again if it failed?
+	
+	// Idea:
+	// Have a NSMutableDictionary *failedPaths: key is path, value is time of last
+	// failure. Then we have a property failureRetryInterval which is used in the supervisor
+	// main loop do decide whether or not to try again.
 }
 
 
@@ -118,8 +127,15 @@
 				while (filename = [dirEnum nextObject]) {
 					if (![filename hasPrefix:@"."]) {
 						path = [[qdir stringByAppendingPathComponent:filename] stringByStandardizingPath];
-						if (![filesInTransit containsObject:path])
+						if (![filesInTransit containsObject:path]) {
+							if ([currentSendOperations count] >= app.maxNumberOfConcurrentSendOperationsPerFolder) {
+								#if DEBUG
+								NSLog(@"[%@] have files waiting to be sent (maxNumberOfConcurrentSendOperationsPerFolder=%u limit in effect)", self, app.maxNumberOfConcurrentSendOperationsPerFolder);
+								#endif
+								break;
+							}
 							[self sendFile:path name:filename];
+						}
 					}
 				}
 			}

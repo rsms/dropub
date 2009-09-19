@@ -3,6 +3,7 @@
 NSOperationQueue *g_opq;
 NSString *DPToolbarFoldersItemIdentifier = @"DPToolbarFoldersItem";
 NSString *DPToolbarSettingsItemIdentifier = @"DPToolbarSettingsItem";
+NSString *DPErrorDomain = @"DPError";
 
 int main(int argc, const char *argv[]) {
 	g_opq = [[NSOperationQueue alloc] init];

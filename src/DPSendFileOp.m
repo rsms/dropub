@@ -9,12 +9,16 @@
 
 -(id)initWithPath:(NSString *)p name:(NSString *)n conf:(NSDictionary *)c {
 	self = [super init];
+	
+	task = nil;
 	path = p;
 	name = n;
 	conf = c;
-	scpIsRunning = NO;
+	didInterruptTaskOnPurpose = NO;
+	
 	fexmon = [[DSFileExistenceMonitor alloc] initWithPath:path checkInterval:1.0 delegate:self];
 	[g_opq addOperation:fexmon];
+	
 	return self;
 }
 
@@ -25,69 +29,208 @@
 }
 
 - (void)cancel {
-	// todo send interrupt signal to SCP process, if any (but only if scpIsRunning is true)
+	NSLog(@"[%@] cancelling (task=%@)", self, task);
+	if (task) {
+		#if DEBUG
+		NSLog(@"[%@] sending SIGINT to scp process %d", self, [task processIdentifier]);
+		#endif
+		didInterruptTaskOnPurpose = YES;
+		kill([task processIdentifier], SIGINT);
+	}
 	if (fexmon && [fexmon respondsToSelector:@selector(cancel)])
 		[fexmon cancel];
 	[super cancel];
 }
 
 
+- (int)executeRemoteShellCommand:(NSString *)cmd {
+	NSString *dstHost = [conf objectForKey:@"remoteHost"];
+	if (!dstHost || ![dstHost length]) {
+		// unlikely
+		NSLog(@"[%@] executeRemoteShellCommand: missing 'remoteHost' (or it's empty) in config", self);
+		return -1;
+	}
+	cmd = [cmd stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
+	cmd = [NSString stringWithFormat:@"ssh -n '%@' -- \"%@\"", dstHost, cmd];
+	return system([cmd UTF8String]);
+}
+
+
 - (void)main {
-	NSString *cmd, *dstHost, *dstPath;
+	NSString *dstHost, *dstPath, *dstPathFinal, *scpPath, *tempName;
+	NSArray *args;
+	NSError *error = nil;
 	int status;
 	
+	scpPath = [[NSUserDefaults standardUserDefaults] stringForKey:@"scpPath"];
+	if (!scpPath || [[NSFileManager defaultManager] fileExistsAtPath:scpPath])
+		scpPath = @"/usr/bin/scp";
+	
+	#if DEBUG
 	NSLog(@"[%@] starting with conf %@", self, conf);
+	#endif
 	
 	if (!(dstHost = [conf objectForKey:@"remoteHost"])) {
+		#if DEBUG
 		NSLog(@"[%@] missing 'remoteHost' in config -- aborting", self);
+		#endif
+		error = [NSError droPubErrorWithDescription:@"missing 'remoteHost' in config"];
 		goto fail;
 	}
 	if ([dstHost length] < 1) {
+		#if DEBUG
 		NSLog(@"[%@] empty 'remoteHost' in config -- aborting", self);
+		#endif
+		error = [NSError droPubErrorWithDescription:@"empty 'remoteHost' in config"];
 		goto fail;
 	}
 	
-	if (!(dstPath = [conf objectForKey:@"remotePath"]))
-		dstPath = name;
-	else
-		dstPath = [dstPath stringByAppendingPathComponent:name];
-	cmd = [NSString stringWithFormat:@"scp -B -o ConnectTimeout=10 -o ServerAliveCountMax=30 -o ServerAliveInterval=30 -pC -q \"%@\" \"%@:'%@'\"", path, dstHost, dstPath];
+	tempName = [@".dpupload_" stringByAppendingString:name];
 	
-	NSLog(@"[%@] sending %@ --> %@:%@", self, path, dstHost, dstPath);
-#if DEBUG
-	NSLog(@"[%@] system(\"%@\")", self, cmd);
-#endif
-	
-	// todo use popen or NSTask so we can send cancel signal to our child process
-	scpIsRunning = YES;
-	status = system([cmd UTF8String]);
-	scpIsRunning = NO;
-	
-	if (status != 0) {
-		NSLog(@"[%@] failed", self);
-		goto fail;
+	if (!(dstPath = [conf objectForKey:@"remotePath"])) {
+		dstPath = tempName;
+		dstPathFinal = name;
 	}
 	else {
-		NSLog(@"[%@] done", self);
-		if (delegate && [delegate respondsToSelector:@selector(fileTransmission:didSucceedForPath:)])
-			[delegate fileTransmission:self didSucceedForPath:path];
+		dstPathFinal = [dstPath stringByAppendingPathComponent:name];
+		dstPath = [dstPath stringByAppendingPathComponent:tempName];
 	}
 	
+	args = [NSArray arrayWithObjects:
+			@"-o", @"ConnectTimeout=10",
+			@"-o", @"ServerAliveCountMax=30",
+			@"-o", @"ServerAliveInterval=30",
+			@"-pCB",
+			path,
+			[NSString stringWithFormat:@"%@:'%@'", dstHost, dstPath],
+	nil];
+	
+	
+	#if DEBUG
+	NSLog(@"[%@] sending %@ --> %@:%@", self, path, dstHost, dstPath);
+	NSLog(@"[%@] starting task: %@ %@", self, scpPath, [[args description] stringByReplacingOccurrencesOfString:@"\n" withString:@" "]);
+	#else
+	NSLog(@"[%@] sending %@ --> %@:%@ (atomically)", self, path, dstHost, dstPathFinal);
+	#endif
+	
+	// todo use popen or NSTask so we can send cancel signal to our child process
+	task = [[NSTask alloc] init];
+	[task setLaunchPath:scpPath];
+	[task setArguments:args];
+	
+	NSPipe *pipe = [NSPipe pipe];
+	NSFileHandle* readHandle = [pipe fileHandleForReading];
+	[readHandle readInBackgroundAndNotify];
+	[task setStandardError:pipe];
+	NSMutableString *stderrStr = [NSMutableString string];
+	
+	[task setCurrentDirectoryPath:path];
+	[task launch];
+	if (!task) {
+		NSLog(@"[%@] failed to start scp with arguments %@", self, args);
+		error = [NSError droPubErrorWithFormat:@"failed to launch %@ with arguments '%@'",
+			scpPath, [args componentsJoinedByString:@"' '"]];
+		goto fail;
+	}
+	
+	// wait for scp to exit
+	#if DEBUG
+	NSLog(@"[%@] SCP %@ started with PID %d", self, task, [task processIdentifier]);
+	#endif
+	
+	// read stderr until scp exists
+	while([task isRunning]) {
+		NSData *data = [readHandle availableData];
+		if (data && [data length])
+			[stderrStr appendString:[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]];
+	}
+	
+	status = [task terminationStatus];
+	task = nil;
+	
+	// cancel file existence monitor
 	[fexmon cancel];
 	fexmon = nil;
-	// todo
-	// aborted (e.g. conf[host] changed and the send operation need to restart)
-	// [delegate fileTransmission:self didAbortForPath:path];
+	
+	// handle status
+	if (status != 0) {
+		if (didInterruptTaskOnPurpose) {
+			#if DEBUG
+			NSLog(@"[%@] aborted", self);
+			#endif
+			
+			// try to remove remote temp file
+			NSString *cmd = [NSString stringWithFormat:@"rm -f %@", [dstPath shellArgumentRepresentation]];
+			if ([self executeRemoteShellCommand:cmd] != 0) {
+				NSLog(@"[%@] notice: failed to remove remote temp file %@", self, dstPath);
+			}
+			#if DEBUG
+			else {
+				NSLog(@"[%@] successfully removed remote tempfile %@ after abortion", self, dstPath);
+			}
+			#endif
+			
+			// inform delegate
+			if (delegate && [delegate respondsToSelector:@selector(fileTransmission:didAbortForPath:)])
+				[delegate fileTransmission:self didAbortForPath:path];
+			#if DEBUG
+			else if (delegate)
+				NSLog(@"[%@] warn: delegate not responding to fileTransmission:didAbortForPath:");
+			#endif
+		}
+		else {
+			NSLog(@"[%@] failed with status %d", self, status);
+			if ([name rangeOfString:@"/"].length && [stderrStr rangeOfString:@"No such file or directory"].length) {
+				// oh, target directory need to be created. Let's try ssh mkdir -p:
+				NSString *rmkdir = [NSString stringWithFormat:@"mkdir -p %@", [[dstPath stringByDeletingLastPathComponent] shellArgumentRepresentation]];
+				if ([self executeRemoteShellCommand:rmkdir] == 0) {
+					NSLog(@"[%@] created remote directory %@:%@", self, dstHost, dstPath);
+				}
+				else {
+					NSLog(@"[%@] failed to create remote directory (%@) => !0", self, rmkdir);
+				}
+			}
+			error = [NSError droPubErrorWithDescription:[stderrStr stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] code:status];
+			goto fail;
+		}
+	}
+	else {
+		#if DEBUG
+		NSLog(@"[%@] done", self);
+		#endif
+		
+		// try to move remote temp file
+		NSString *cmd = [NSString stringWithFormat:@"mv -f %@ %@", [dstPath shellArgumentRepresentation], [dstPathFinal shellArgumentRepresentation]];
+		if ([self executeRemoteShellCommand:cmd] != 0) {
+			NSLog(@"[%@] failed to move remote temp file %@ --> %@", self, dstPath, dstPathFinal);
+			error = [NSError droPubErrorWithFormat:@"failed to move remote temp file %@ --> %@", dstPath, dstPathFinal];
+			goto fail;
+		}
+		#if DEBUG
+		else {
+			NSLog(@"[%@] successfully moved remote %@ --> %@", self, dstPath, dstPathFinal);
+		}
+		#endif
+		
+		// inform delegate
+		if (delegate && [delegate respondsToSelector:@selector(fileTransmission:didSucceedForPath:)])
+			[delegate fileTransmission:self didSucceedForPath:path];
+		#if DEBUG
+		else if (delegate)
+			NSLog(@"[%@] warn: delegate not responding to fileTransmission:didSucceedForPath:");
+		#endif
+	}
+	
+	return;
 	
 fail:
-	
-	// todo split up into "fail" and "error" -- "fail" means "try again soon", "error" 
-	// means "permanent error", like for instance the remote path or host did not exist.
-	// In other words, "error" when SCP tells us something is wrong and "fail" when
-	// connection is lost, corrupt transmission or I/O error.
-	
-	if (delegate && [delegate respondsToSelector:@selector(fileTransmission:didFailForPath:)])
-		[delegate fileTransmission:self didFailForPath:path];
+	// inform delegate
+	if (delegate && [delegate respondsToSelector:@selector(fileTransmission:didFailForPath:reason:)])
+		[delegate fileTransmission:self didFailForPath:path reason:error];
+	#if DEBUG
+	else if (delegate)
+		NSLog(@"[%@] warn: delegate not responding to fileTransmission:didSucceedForPath:");
+	#endif
 }
 
 @end

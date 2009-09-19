@@ -28,6 +28,9 @@
 	showQueueCountInMenuBar = (n && [n boolValue]); // default NO
 	n = [defaults objectForKey:@"paused"];
 	paused = (n && [n boolValue]); // default NO
+	maxNumberOfConcurrentSendOperationsPerFolder = 8;
+	n = [defaults objectForKey:@"maxNumberOfConcurrentSendOperationsPerFolder"];
+	if (n) maxNumberOfConcurrentSendOperationsPerFolder = [n unsignedIntValue];
 	
 	// read showInDock
 	showInDock = YES;
@@ -128,6 +131,15 @@
 	#endif
 	paused = y;
 	[defaults setBool:paused forKey:@"paused"];
+}
+
+- (NSUInteger)maxNumberOfConcurrentSendOperationsPerFolder {
+	return maxNumberOfConcurrentSendOperationsPerFolder;
+}
+
+- (void)setMaxNumberOfConcurrentSendOperationsPerFolder:(NSUInteger)y {
+	maxNumberOfConcurrentSendOperationsPerFolder = y;
+	[defaults setObject:[NSNumber numberWithUnsignedInteger:maxNumberOfConcurrentSendOperationsPerFolder] forKey:@"maxNumberOfConcurrentSendOperationsPerFolder"];
 }
 
 
@@ -456,8 +468,11 @@
 - (void)supervisedFilesInTransitDidChange:(DPSupervisor *)supervisor {
 	// update currentNumberOfFilesInTransit
 	currentNumberOfFilesInTransit = 0;
-	for (DPSupervisor *sv in supervisors)
+	NSEnumerator *enumerator = [supervisors objectEnumerator];
+	DPSupervisor *sv;
+	while ((sv = [enumerator nextObject])) {
 		currentNumberOfFilesInTransit += [sv.filesInTransit count];
+	}
 	[self updateMenuItem:self];
 }
 
