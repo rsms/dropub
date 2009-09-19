@@ -1,4 +1,5 @@
 #import "DPSupervisor.h"
+#import "Sparkle/SUUpdater.h"
 
 @interface DPAppDelegate : NSObject {
 	NSUserDefaults *defaults;
@@ -11,6 +12,7 @@
 	IBOutlet NSToolbar *toolbar;
 	IBOutlet NSView *foldersSettingsView;
 	IBOutlet NSView *advancedSettingsView;
+	IBOutlet SUUpdater *updater;
 	NSMutableArray *dirs;
 	NSMutableArray *_dirsPrevState;
 	NSMutableDictionary *_dirConfPrevState;

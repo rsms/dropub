@@ -6,6 +6,21 @@
 	objectVersion = 45;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		3A919A2F10658585002D0F4B /* Distribution */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 3A919A46106585A1002D0F4B /* Build configuration list for PBXAggregateTarget "Distribution" */;
+			buildPhases = (
+				3A919A4410658592002D0F4B /* ShellScript */,
+			);
+			dependencies = (
+				3A919A52106586A9002D0F4B /* PBXTargetDependency */,
+			);
+			name = Distribution;
+			productName = Distribution;
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
 		3A1504AE10618DDF00263983 /* DPAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A1504AD10618DDF00263983 /* DPAppDelegate.m */; };
 		3A5DB2781062C89000B5F45F /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3A5DB2771062C89000B5F45F /* MainMenu.xib */; };
@@ -17,6 +32,9 @@
 		3A91991E1065620D002D0F4B /* NSError+DPAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A91991D1065620D002D0F4B /* NSError+DPAdditions.m */; };
 		3A91998910657080002D0F4B /* NSTask+DpAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A91998810657080002D0F4B /* NSTask+DpAdditions.m */; };
 		3A919A0410657FF0002D0F4B /* NSString+DPAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A919A0310657FF0002D0F4B /* NSString+DPAdditions.m */; };
+		3A919A57106586E4002D0F4B /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A919A56106586E4002D0F4B /* Sparkle.framework */; };
+		3A919A621065874D002D0F4B /* Sparkle.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 3A919A56106586E4002D0F4B /* Sparkle.framework */; };
+		3A919A8C106590CC002D0F4B /* dsa_pub.pem in Resources */ = {isa = PBXBuildFile; fileRef = 3A919A8B106590CC002D0F4B /* dsa_pub.pem */; };
 		3A9D29D1106194D3008923FD /* DPSupervisor.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A9D29D0106194D3008923FD /* DPSupervisor.m */; };
 		3A9D29E110619EC9008923FD /* DPSendFileOp.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A9D29E010619EC9008923FD /* DPSendFileOp.m */; };
 		3A9D2A5E1061B083008923FD /* status-item-standby.png in Resources */ = {isa = PBXBuildFile; fileRef = 3A9D2A5B1061B083008923FD /* status-item-standby.png */; };
@@ -26,6 +44,30 @@
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		3A919A51106586A9002D0F4B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8D1107260486CEB800E47090 /* Dropub */;
+			remoteInfo = Dropub;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3A919A651065874F002D0F4B /* Copy Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				3A919A621065874D002D0F4B /* Sparkle.framework in Copy Frameworks */,
+			);
+			name = "Copy Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
@@ -52,6 +94,8 @@
 		3A91998810657080002D0F4B /* NSTask+DpAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSTask+DpAdditions.m"; path = "src/NSTask+DpAdditions.m"; sourceTree = "<group>"; };
 		3A919A0210657FF0002D0F4B /* NSString+DPAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSString+DPAdditions.h"; path = "src/NSString+DPAdditions.h"; sourceTree = "<group>"; };
 		3A919A0310657FF0002D0F4B /* NSString+DPAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSString+DPAdditions.m"; path = "src/NSString+DPAdditions.m"; sourceTree = "<group>"; };
+		3A919A56106586E4002D0F4B /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Sparkle.framework; path = frameworks/Sparkle.framework; sourceTree = "<group>"; };
+		3A919A8B106590CC002D0F4B /* dsa_pub.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = dsa_pub.pem; path = resources/dsa_pub.pem; sourceTree = "<group>"; };
 		3A9D29CF106194D3008923FD /* DPSupervisor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPSupervisor.h; path = src/DPSupervisor.h; sourceTree = "<group>"; };
 		3A9D29D0106194D3008923FD /* DPSupervisor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPSupervisor.m; path = src/DPSupervisor.m; sourceTree = "<group>"; };
 		3A9D29DF10619EC9008923FD /* DPSendFileOp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPSendFileOp.h; path = src/DPSendFileOp.h; sourceTree = "<group>"; };
@@ -61,7 +105,7 @@
 		3A9D2A5D1061B083008923FD /* status-item-selected.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "status-item-selected.png"; path = "resources/status-item-selected.png"; sourceTree = "<group>"; };
 		3A9D2AB81061B799008923FD /* DSFileExistenceMonitor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DSFileExistenceMonitor.h; path = src/DSFileExistenceMonitor.h; sourceTree = "<group>"; };
 		3A9D2AB91061B799008923FD /* DSFileExistenceMonitor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DSFileExistenceMonitor.m; path = src/DSFileExistenceMonitor.m; sourceTree = "<group>"; };
-		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = resources/Info.plist; sourceTree = "<group>"; };
+		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; explicitFileType = text.xml; fileEncoding = 4; name = Info.plist; path = resources/Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* DroPub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DroPub.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -71,6 +115,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
+				3A919A57106586E4002D0F4B /* Sparkle.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -80,6 +125,7 @@
 		1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				3A919A56106586E4002D0F4B /* Sparkle.framework */,
 				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
 			);
 			name = "Linked Frameworks";
@@ -148,6 +194,7 @@
 		29B97317FDCFA39411CA2CEA /* resources */ = {
 			isa = PBXGroup;
 			children = (
+				3A919A8B106590CC002D0F4B /* dsa_pub.pem */,
 				3A9196291063D08A002D0F4B /* icon.icns */,
 				3A9D2A5B1061B083008923FD /* status-item-standby.png */,
 				3A9D2A5C1061B083008923FD /* status-item-sending.png */,
@@ -177,6 +224,7 @@
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
 				8D11072E0486CEB800E47090 /* Frameworks */,
+				3A919A651065874F002D0F4B /* Copy Frameworks */,
 			);
 			buildRules = (
 			);
@@ -201,6 +249,7 @@
 			projectRoot = "";
 			targets = (
 				8D1107260486CEB800E47090 /* Dropub */,
+				3A919A2F10658585002D0F4B /* Distribution */,
 			);
 		};
 /* End PBXProject section */
@@ -215,10 +264,27 @@
 				3A9D2A601061B083008923FD /* status-item-selected.png in Resources */,
 				3A5DB2781062C89000B5F45F /* MainMenu.xib in Resources */,
 				3A91962A1063D08A002D0F4B /* icon.icns in Resources */,
+				3A919A8C106590CC002D0F4B /* dsa_pub.pem in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		3A919A4410658592002D0F4B /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "/bin/bash admin/distribution.sh\nexit $?";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		8D11072C0486CEB800E47090 /* Sources */ = {
@@ -242,12 +308,45 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		3A919A52106586A9002D0F4B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8D1107260486CEB800E47090 /* Dropub */;
+			targetProxy = 3A919A51106586A9002D0F4B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		3A919A3010658585002D0F4B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				PRODUCT_NAME = Distribution;
+			};
+			name = Debug;
+		};
+		3A919A3110658585002D0F4B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				PRODUCT_NAME = Distribution;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
 		C01FCF4B08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/frameworks\"",
+				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_ENABLE_OBJC_GC = required;
@@ -267,6 +366,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/frameworks\"",
+				);
 				GCC_ENABLE_OBJC_GC = required;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -307,6 +410,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		3A919A46106585A1002D0F4B /* Build configuration list for PBXAggregateTarget "Distribution" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3A919A3010658585002D0F4B /* Debug */,
+				3A919A3110658585002D0F4B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "Dropub" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

@@ -273,6 +273,9 @@
 #pragma mark -
 #pragma mark NSApplication delegate methods
 
+//- (void)applicationWillFinishLaunching:(NSNotification *)aNotification {
+//}
+
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
 	// setup supervisors for saved dirconfs
 	for (NSMutableDictionary *conf in dirs) {
