@@ -9,10 +9,24 @@
 
 @synthesize dirs;
 
+#pragma mark -
+#pragma mark Initialization & setup
+
 - (id)init {
 	self = [super init];
 	
-	dirs = [[NSUserDefaults standardUserDefaults] objectForKey:@"directories"];
+	// init members
+	defaults = [NSUserDefaults standardUserDefaults];
+	currentNumberOfFilesInTransit = 0;
+	
+	// read general settings from defaults
+	NSNumber *n = [defaults objectForKey:@"showInMenuBar"];
+	showInMenuBar = (!n || [n boolValue]);
+	n = [defaults objectForKey:@"showQueueCountInMenuBar"];
+	showQueueCountInMenuBar = (!n || [n boolValue]);
+	
+	// read dirs from defaults
+	dirs = [defaults objectForKey:@"directories"];
 	if (!dirs || ![dirs respondsToSelector:@selector(objectAtIndex:)]) {
 		dirs = [NSMutableArray array];
 	}
@@ -26,7 +40,7 @@
 	dirFields = [NSArray arrayWithObjects:
 				 @"icon", @"localpath", @"remoteHost", @"remotePath", @"disabled", nil];
 	
-	// KVO
+	// Enable KVO for dirs
 	[self addObserver:self forKeyPath:@"dirs" options:0 context:nil];
 	for (NSMutableDictionary *conf in dirs) {
 		for (NSString *fieldName in dirFields) {
@@ -39,27 +53,164 @@
 }
 
 - (void)awakeFromNib {
-	// For increased priority:
-	// _statusItemWithLength:0 withPriority:INT_MAX
-	if (statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:0]) {
-		[statusItem setLength:0];
-		// Setup the status item here.
-		//[statusItem setTitle:@"0"];
-		[statusItem setImage:[NSImage imageNamed:@"status-item-standby.png"]];
-		[statusItem setAlternateImage:[NSImage imageNamed:@"status-item-selected.png"]];
-		[statusItem setHighlightMode:YES];
-		[statusItem setMenu:statusItemMenu];
-		// todo [statusItem setMenu:NSMenu]
-		[statusItem setLength:NSVariableStatusItemLength];
-	}
+	[self enableOrDisableMenuItem:self];
+	
+	// set default selected toolbar item and view
+	[toolbar setSelectedItemIdentifier:DPToolbarFoldersItemIdentifier];
 }
+
+#pragma mark -
+#pragma mark Custom properties
+
+- (BOOL)showInMenuBar {
+	return showInMenuBar;
+}
+
+- (void)setShowInMenuBar:(BOOL)y {
+	NSLog(@"setShowInMenuBar = %d", y);
+	showInMenuBar = y;
+	[statusItem setEnabled:showInMenuBar];
+	[defaults setBool:showInMenuBar forKey:@"showInMenuBar"];
+	[self enableOrDisableMenuItem:self];
+}
+
+- (BOOL)showQueueCountInMenuBar {
+	return showQueueCountInMenuBar;
+}
+
+- (void)setShowQueueCountInMenuBar:(BOOL)y {
+	NSLog(@"showQueueCountInMenuBar = %d", y);
+	showQueueCountInMenuBar = y;
+	[defaults setBool:showQueueCountInMenuBar forKey:@"showQueueCountInMenuBar"];
+	[self updateMenuItem:self];
+}
+
+#pragma mark -
+#pragma mark NSApplication delegate methods
+
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+	// setup supervisors for saved dirconfs
+	for (NSMutableDictionary *conf in dirs) {
+		if ([conf droPubConfIsEnabled] && [conf droPubConfIsComplete])
+			[self startSupervising:conf];
+	}
+	
+	// first launch or no dirconfs? -- show config window
+	if ([dirs count] == 0)
+		[self orderFrontFoldersSettingsWindow:self];
+#if DEBUG
+	NSLog(@"dirs = %@", dirs);
+#endif
+}
+
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
 	[self saveState:self];
 }
 
+
+#pragma mark -
+#pragma mark NSToolbar delegate methods
+
+- (NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)_toolbar {
+	return [NSArray arrayWithObjects:
+		DPToolbarFoldersItemIdentifier,
+		DPToolbarSettingsItemIdentifier,
+		NSToolbarFlexibleSpaceItemIdentifier,
+		NSToolbarSpaceItemIdentifier,
+		NSToolbarSeparatorItemIdentifier, nil];
+}
+
+- (NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar *)_toolbar {
+	return [NSArray arrayWithObjects:DPToolbarFoldersItemIdentifier, DPToolbarSettingsItemIdentifier, nil];	
+}
+
+- (NSArray *)toolbarSelectableItemIdentifiers:(NSToolbar *)_toolbar {
+	return [self toolbarDefaultItemIdentifiers:_toolbar];
+}
+
+- (NSToolbarItem *)toolbar:(NSToolbar *)_toolbar itemForItemIdentifier:(NSString *)itemIdentifier willBeInsertedIntoToolbar:(BOOL)flag
+{
+	NSToolbarItem *item = nil;
+	if (itemIdentifier == DPToolbarFoldersItemIdentifier) {
+		item = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
+		[item setImage:[[NSWorkspace sharedWorkspace] iconForFile:@"/System/Library/Caches"]];
+		[item setLabel:@"Folders"];
+		[item setToolTip:@"Manage watched folders"];
+		[item setTarget:self];
+		[item setAction:@selector(displayViewForFoldersSettings:)];
+	}
+	else if (itemIdentifier == DPToolbarSettingsItemIdentifier) {
+		item = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
+		[item setImage:[NSImage imageNamed:@"NSPreferencesGeneral"]];
+		[item setLabel:@"General"];
+		[item setToolTip:@"Optional settings"];
+		[item setTarget:self];
+		[item setAction:@selector(displayViewForAdvancedSettings:)];
+	}
+	return item;
+}
+
+#pragma mark -
+#pragma mark Actions
+
+- (IBAction)enableOrDisableMenuItem:(id)sender {
+	if (showInMenuBar)
+		[self enableMenuItem:self];
+	else
+		[self disableMenuItem:self];
+}
+
+- (IBAction)enableMenuItem:(id)sender {
+	// For increased priority:
+	// _statusItemWithLength:0 withPriority:INT_MAX
+	if (!statusItem && (statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:0])) {
+		[statusItem setLength:0];
+		[statusItem setAlternateImage:[NSImage imageNamed:@"status-item-selected.png"]];
+		[statusItem setHighlightMode:YES];
+		[statusItem setMenu:statusItemMenu];
+		[statusItem setLength:NSVariableStatusItemLength];
+		[self updateMenuItem:sender];
+	}
+}
+
+- (IBAction)disableMenuItem:(id)sender {
+	if (statusItem) {
+		[[statusItem statusBar] removeStatusItem:statusItem];
+		statusItem = nil;
+	}
+}
+
+- (IBAction)updateMenuItem:(id)sender {
+	if (statusItem) {
+		if (currentNumberOfFilesInTransit)
+			[statusItem setImage:[NSImage imageNamed:@"status-item-sending.png"]];
+		else
+			[statusItem setImage:[NSImage imageNamed:@"status-item-standby.png"]];
+		
+		if (showQueueCountInMenuBar) {
+			[statusItem setLength:NSVariableStatusItemLength];
+			[statusItem setTitle:[NSString stringWithFormat:@"%u", currentNumberOfFilesInTransit]];
+		}
+		else {
+			if ([statusItem title])
+				[statusItem setTitle:nil];
+			[statusItem setLength:25.0];
+		}
+	}
+}
+
+- (IBAction)displayViewForFoldersSettings:(id)sender {
+	if ([mainWindow contentView] != foldersSettingsView)
+		[mainWindow setContentView:foldersSettingsView];// display:YES animate:YES];
+}
+
+- (IBAction)displayViewForAdvancedSettings:(id)sender {
+	if ([mainWindow contentView] != advancedSettingsView)
+		[mainWindow setContentView:advancedSettingsView];// display:YES animate:YES];
+}
+
 - (IBAction)saveState:(id)sender {
-	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 	if (dirs) {
 		NSMutableArray *conf = [dirs droPubConfsByStrippingOptionalData];
 		[defaults setObject:conf forKey:@"directories"];
@@ -69,8 +220,14 @@
 	}
 }
 
-- (IBAction)orderFrontDirConfigWindow:(id)sender {
-	[NSApp activateIgnoringOtherApps:YES];
+- (IBAction)orderFrontFoldersSettingsWindow:(id)sender {
+	[self displayViewForFoldersSettings:sender];
+	[self orderFrontSettingsWindow:sender];
+}
+
+- (IBAction)orderFrontSettingsWindow:(id)sender {
+	if (![NSApp isActive])
+		[NSApp activateIgnoringOtherApps:YES];
 	[mainWindow makeKeyAndOrderFront:sender];
 }
 
@@ -89,14 +246,14 @@
 	[panel setCanChooseFiles:NO];
 	[panel setCanCreateDirectories:YES];
 	[panel setAllowsMultipleSelection:NO];
-	[panel setTitle:@"Select local directory"];
-	[panel setPrompt:@"Use directory"];
-	[panel setMessage:@"Select a directory which to upload new files from."];
-	initialDir = [[NSUserDefaults standardUserDefaults] objectForKey:@"localpathBrowseDialogDir"];
+	[panel setTitle:@"Select folder"];
+	[panel setPrompt:@"Use folder"];
+	[panel setMessage:@"Select a folder which to transfer files from."];
+	initialDir = [defaults objectForKey:@"localpathBrowseDialogDir"];
 	
 	if ([panel runModalForDirectory:initialDir file:nil] == NSOKButton) {
 		if ((lookingAtDir = [panel directory]))
-			[[NSUserDefaults standardUserDefaults] setObject:lookingAtDir forKey:@"localpathBrowseDialogDir"];
+			[defaults setObject:lookingAtDir forKey:@"localpathBrowseDialogDir"];
 		files = [panel filenames];
 		if ([files count] && (path = [files objectAtIndex:0])) {
 			selectedObjects = [dirConfArrayController selectedObjects];
@@ -118,6 +275,10 @@
 	if (![self displayBrowseDialogForLocalPath])
 		[dirConfArrayController remove:sender];
 }
+
+
+#pragma mark -
+#pragma mark Key-Value Observation
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
@@ -197,21 +358,6 @@
 	}
 }
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-	// setup supervisors for saved dirconfs
-	for (NSMutableDictionary *conf in dirs) {
-		if ([conf droPubConfIsEnabled] && [conf droPubConfIsComplete])
-			[self startSupervising:conf];
-	}
-	
-	// first launch or no dirconfs? -- show config window
-	if ([dirs count] == 0)
-		[self orderFrontDirConfigWindow:self];
-	#if DEBUG
-		NSLog(@"dirs = %@", dirs);
-	#endif
-}
-
 - (void)dirConfigWasCreated:(NSMutableDictionary *)conf {
 	#if DEBUG
 		NSLog(@"dirConfigWasCreated %@", conf);
@@ -251,9 +397,31 @@
 	[self stopSupervising:conf];
 }
 
+
+#pragma mark -
+#pragma mark DPSupervisor delegate methods
+
 - (DPSupervisor *)supervisorForConf:(NSDictionary *)conf {
 	return [supervisors objectForKey:[conf objectForKey:@"localpath"]];
 }
+
+- (void)supervisedFilesInTransitDidChange:(DPSupervisor *)supervisor {
+	// update currentNumberOfFilesInTransit
+	currentNumberOfFilesInTransit = 0;
+	for (DPSupervisor *sv in supervisors)
+		currentNumberOfFilesInTransit += [sv.filesInTransit count];
+	[self updateMenuItem:self];
+}
+
+- (void)supervisorDidExit:(DPSupervisor *)sv {
+	NSString *pk = [sv.conf objectForKey:@"localpath"];
+	if ([supervisors objectForKey:pk])
+		[supervisors removeObjectForKey:pk];
+}
+
+
+#pragma mark -
+#pragma mark Supervision
 
 - (DPSupervisor *)startSupervising:(NSDictionary *)dirConf {
 	NSError *error = nil;
@@ -279,24 +447,6 @@
 		[sv cancel];
 	else
 		NSLog(@"warn: stopSupervising: no supervisor found for conf %@", conf);
-}
-
-- (void)supervisedFilesInTransitDidChange:(DPSupervisor *)supervisor {
-	NSUInteger count = [supervisor.filesInTransit count];
-	if (count)
-		[statusItem setImage:[NSImage imageNamed:@"status-item-sending.png"]];
-	else
-		[statusItem setImage:[NSImage imageNamed:@"status-item-standby.png"]];
-	if (count)
-		[statusItem setTitle:[NSString stringWithFormat:@"%u", count]];
-	else
-		[statusItem setTitle:nil];
-}
-
-- (void)supervisorDidExit:(DPSupervisor *)sv {
-	NSString *pk = [sv.conf objectForKey:@"localpath"];
-	if ([supervisors objectForKey:pk])
-		[supervisors removeObjectForKey:pk];
 }
 
 @end

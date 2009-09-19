@@ -13,6 +13,7 @@
 		3A9196861063DC1C002D0F4B /* NSDictionary+DPAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A9196851063DC1C002D0F4B /* NSDictionary+DPAdditions.m */; };
 		3A9196CE1063E2F9002D0F4B /* NSMutableDictionary+DPAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A9196CC1063E2F9002D0F4B /* NSMutableDictionary+DPAdditions.m */; };
 		3A9197011063E57D002D0F4B /* NSArray+DPAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A9196FF1063E57D002D0F4B /* NSArray+DPAdditions.m */; };
+		3A9197CF1065303A002D0F4B /* NSWindow+DPAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A9197CE1065303A002D0F4B /* NSWindow+DPAdditions.m */; };
 		3A9D29D1106194D3008923FD /* DPSupervisor.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A9D29D0106194D3008923FD /* DPSupervisor.m */; };
 		3A9D29E110619EC9008923FD /* DPSendFileOp.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A9D29E010619EC9008923FD /* DPSendFileOp.m */; };
 		3A9D2A5E1061B083008923FD /* status-item-standby.png in Resources */ = {isa = PBXBuildFile; fileRef = 3A9D2A5B1061B083008923FD /* status-item-standby.png */; };
@@ -40,6 +41,8 @@
 		3A9196CD1063E2F9002D0F4B /* NSMutableDictionary+DPAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSMutableDictionary+DPAdditions.h"; path = "src/NSMutableDictionary+DPAdditions.h"; sourceTree = "<group>"; };
 		3A9196FF1063E57D002D0F4B /* NSArray+DPAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSArray+DPAdditions.m"; path = "src/NSArray+DPAdditions.m"; sourceTree = "<group>"; };
 		3A9197001063E57D002D0F4B /* NSArray+DPAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSArray+DPAdditions.h"; path = "src/NSArray+DPAdditions.h"; sourceTree = "<group>"; };
+		3A9197CD1065303A002D0F4B /* NSWindow+DPAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSWindow+DPAdditions.h"; path = "src/NSWindow+DPAdditions.h"; sourceTree = "<group>"; };
+		3A9197CE1065303A002D0F4B /* NSWindow+DPAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSWindow+DPAdditions.m"; path = "src/NSWindow+DPAdditions.m"; sourceTree = "<group>"; };
 		3A9D29CF106194D3008923FD /* DPSupervisor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPSupervisor.h; path = src/DPSupervisor.h; sourceTree = "<group>"; };
 		3A9D29D0106194D3008923FD /* DPSupervisor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPSupervisor.m; path = src/DPSupervisor.m; sourceTree = "<group>"; };
 		3A9D29DF10619EC9008923FD /* DPSendFileOp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPSendFileOp.h; path = src/DPSendFileOp.h; sourceTree = "<group>"; };
@@ -121,6 +124,8 @@
 				3A9196851063DC1C002D0F4B /* NSDictionary+DPAdditions.m */,
 				3A9196CD1063E2F9002D0F4B /* NSMutableDictionary+DPAdditions.h */,
 				3A9196CC1063E2F9002D0F4B /* NSMutableDictionary+DPAdditions.m */,
+				3A9197CD1065303A002D0F4B /* NSWindow+DPAdditions.h */,
+				3A9197CE1065303A002D0F4B /* NSWindow+DPAdditions.m */,
 			);
 			name = src;
 			sourceTree = "<group>";
@@ -213,6 +218,7 @@
 				3A9196861063DC1C002D0F4B /* NSDictionary+DPAdditions.m in Sources */,
 				3A9196CE1063E2F9002D0F4B /* NSMutableDictionary+DPAdditions.m in Sources */,
 				3A9197011063E57D002D0F4B /* NSArray+DPAdditions.m in Sources */,
+				3A9197CF1065303A002D0F4B /* NSWindow+DPAdditions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,6 +1,8 @@
 #import "DPAppDelegate.h"
 
 NSOperationQueue *g_opq;
+NSString *DPToolbarFoldersItemIdentifier = @"DPToolbarFoldersItem";
+NSString *DPToolbarSettingsItemIdentifier = @"DPToolbarSettingsItem";
 
 int main(int argc, const char *argv[]) {
 	g_opq = [[NSOperationQueue alloc] init];
