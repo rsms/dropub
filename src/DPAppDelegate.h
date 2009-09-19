@@ -15,13 +15,19 @@
 
 @property(readonly) NSMutableArray *dirs;
 
-- (IBAction)orderFrontDirConfigWindow:(id)sender;
+- (BOOL)displayBrowseDialogForLocalPath;
 
+- (IBAction)orderFrontDirConfigWindow:(id)sender;
+- (IBAction)displayBrowseDialogForLocalPath:(id)sender;
+- (IBAction)addNewAndDisplayBrowseDialogForLocalPath:(id)sender;
+- (IBAction)saveState:(id)sender;
+
+- (DPSupervisor *)supervisorForConf:(NSDictionary *)conf;
 - (DPSupervisor *)startSupervising:(NSDictionary *)dirConf;
 - (void)stopSupervising:(NSDictionary *)conf;
 
-- (void)dirConfigWasCreated:(NSDictionary *)conf;
-- (void)dirConfigWasModified:(NSDictionary *)newConf previous:(NSDictionary *)oldConf;
-- (void)dirConfigWasDeleted:(NSDictionary *)conf;
+- (void)dirConfigWasCreated:(NSMutableDictionary *)conf;
+- (void)dirConfigWasModified:(NSMutableDictionary *)newConf previous:(NSMutableDictionary *)oldConf;
+- (void)dirConfigWasDeleted:(NSMutableDictionary *)conf;
 
 @end

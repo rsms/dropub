@@ -20,13 +20,20 @@
 		dirs = [dirs mutableCopy];
 		[dirConfArrayController setSelectsInsertedObjects:YES];
 	}
-	_dirsPrevState = dirs;
+	_dirsPrevState = [dirs copy];
 	_dirConfPrevState = [NSMutableDictionary dictionary];
 	supervisors = [NSMutableDictionary dictionary];
 	dirFields = [NSArray arrayWithObjects:
-				 @"icon", @"localpath", @"remoteHost", @"remotePath", @"state", nil];
+				 @"icon", @"localpath", @"remoteHost", @"remotePath", @"disabled", nil];
 	
+	// KVO
 	[self addObserver:self forKeyPath:@"dirs" options:0 context:nil];
+	for (NSMutableDictionary *conf in dirs) {
+		for (NSString *fieldName in dirFields) {
+			[conf addObserver:self forKeyPath:fieldName options:0 context:nil];
+		}
+		[conf updateIconOfDroPubConf];
+	}
 	
 	return self;
 }
@@ -37,18 +44,29 @@
 	if (statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:0]) {
 		[statusItem setLength:0];
 		// Setup the status item here.
-		[statusItem setTitle:@"0"];
+		//[statusItem setTitle:@"0"];
 		[statusItem setImage:[NSImage imageNamed:@"status-item-standby.png"]];
 		[statusItem setAlternateImage:[NSImage imageNamed:@"status-item-selected.png"]];
 		[statusItem setHighlightMode:YES];
-		[statusItem setMenu:statusItemMenu]; 
+		[statusItem setMenu:statusItemMenu];
 		// todo [statusItem setMenu:NSMenu]
 		[statusItem setLength:NSVariableStatusItemLength];
 	}
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
-	[[NSUserDefaults standardUserDefaults] setObject:dirs forKey:@"directories"];
+	[self saveState:self];
+}
+
+- (IBAction)saveState:(id)sender {
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	if (dirs) {
+		NSMutableArray *conf = [dirs droPubConfsByStrippingOptionalData];
+		[defaults setObject:conf forKey:@"directories"];
+	}
+	else {
+		[defaults removeObjectForKey:@"directories"];
+	}
 }
 
 - (IBAction)orderFrontDirConfigWindow:(id)sender {
@@ -56,13 +74,59 @@
 	[mainWindow makeKeyAndOrderFront:sender];
 }
 
+- (IBAction)displayBrowseDialogForLocalPath:(id)sender {
+	[self displayBrowseDialogForLocalPath];
+}
+
+- (BOOL)displayBrowseDialogForLocalPath {
+	NSOpenPanel *panel;
+	NSString *path = nil, *initialDir = nil, *lookingAtDir;
+	NSArray *files, *selectedObjects;
+	NSMutableDictionary *conf;
+	
+	panel = [NSOpenPanel openPanel];
+	[panel setCanChooseDirectories:YES];
+	[panel setCanChooseFiles:NO];
+	[panel setCanCreateDirectories:YES];
+	[panel setAllowsMultipleSelection:NO];
+	[panel setTitle:@"Select local directory"];
+	[panel setPrompt:@"Use directory"];
+	[panel setMessage:@"Select a directory which to upload new files from."];
+	initialDir = [[NSUserDefaults standardUserDefaults] objectForKey:@"localpathBrowseDialogDir"];
+	
+	if ([panel runModalForDirectory:initialDir file:nil] == NSOKButton) {
+		if ((lookingAtDir = [panel directory]))
+			[[NSUserDefaults standardUserDefaults] setObject:lookingAtDir forKey:@"localpathBrowseDialogDir"];
+		files = [panel filenames];
+		if ([files count] && (path = [files objectAtIndex:0])) {
+			selectedObjects = [dirConfArrayController selectedObjects];
+			if ([selectedObjects count] && (conf = [selectedObjects objectAtIndex:0])) {
+				[conf setObject:path forKey:@"localpath"];
+			}
+			else {
+				NSLog(@"no selection %@", selectedObjects);
+				return NO;
+			}
+			return YES;
+		}
+	}
+	return NO;
+}
+
+- (IBAction)addNewAndDisplayBrowseDialogForLocalPath:(id)sender {
+	[dirConfArrayController add:sender];
+	if (![self displayBrowseDialogForLocalPath])
+		[dirConfArrayController remove:sender];
+}
+
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
 	NSUInteger i, index;
-	NSDictionary *dirConf, *oldDirConf;
+	NSMutableDictionary *dirConf, *oldDirConf;
 	NSString *pk;
-	
-	NSLog(@"observed%@[%@]: %@", object, keyPath, change);
+	#if DEBUG
+		NSLog(@"observed%@[%@]: %@", object, keyPath, change);
+	#endif
 	int kind = [[change objectForKey:NSKeyValueChangeKindKey] intValue];
 	
 	if (object == self && [keyPath compare:@"dirs"] == 0) {
@@ -106,7 +170,7 @@
 				}
 				else {
 					// todo find a way to do this nicely
-					dirConf = [NSDictionary dictionary];
+					dirConf = [NSMutableDictionary dictionary];
 				}
 				[self dirConfigWasDeleted:dirConf];
 				[dirConfTableView reloadData];
@@ -117,10 +181,9 @@
 			NSLog(@"unhandled observation event kind: %u", kind);
 		}
 		_dirsPrevState = [dirs copy];
-		[[NSUserDefaults standardUserDefaults] setObject:dirs forKey:@"directories"];
 		//  NSKeyValueChangeRemoval = 3, NSKeyValueChangeReplacement = 4
 	}
-	else if ([object respondsToSelector:@selector(objectForKey:)]) {
+	else if ([object respondsToSelector:@selector(objectForKey:)] && [keyPath compare:@"icon"] != 0) {
 		pk = [object objectForKey:@"localpath"];
 		if (pk) {
 			oldDirConf = [_dirConfPrevState objectForKey:pk];
@@ -128,55 +191,68 @@
 		}
 		else {
 			// todo find a way to do this nicely
-			oldDirConf = [NSDictionary dictionary];
+			oldDirConf = [NSMutableDictionary dictionary];
 		}
 		[self dirConfigWasModified:object previous:oldDirConf];
 	}
 }
 
-- (void)dirConfigWasCreated:(NSDictionary *)conf {
-	NSLog(@"dirConfigWasCreated %@", conf);
-	[self startSupervising:conf];
-}
-
-- (void)dirConfigWasModified:(NSDictionary *)newConf previous:(NSDictionary *)oldConf {
-	// Note: oldDirConf MIGHT BE NULL if no "localpath" is set (it's the primary key)
-	NSLog(@"dirConfigWasModified %@ previous: %@", newConf, oldConf);
-	if (newConf && oldConf && [[newConf objectForKey:@"localpath"] compare:[oldConf objectForKey:@"localpath"]] != 0) {
-		[self stopSupervising:oldConf];
-		[self startSupervising:newConf];
-	}
-	else if (newConf && !oldConf) {
-		[self startSupervising:newConf];
-	}
-}
-
-- (void)dirConfigWasDeleted:(NSDictionary *)conf {
-	NSLog(@"dirConfigWasDeleted %@", conf);
-	[self stopSupervising:conf];
-}
-
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
 	// setup supervisors for saved dirconfs
-	for (NSDictionary *dirConf in dirs) {
-		[self startSupervising:dirConf];
+	for (NSMutableDictionary *conf in dirs) {
+		if ([conf droPubConfIsEnabled] && [conf droPubConfIsComplete])
+			[self startSupervising:conf];
 	}
 	
 	// first launch or no dirconfs? -- show config window
-	if ([dirs count] == 0) {
+	if ([dirs count] == 0)
 		[self orderFrontDirConfigWindow:self];
-	}
-	
-	NSLog(@"dirs = %@", dirs);
+	#if DEBUG
+		NSLog(@"dirs = %@", dirs);
+	#endif
 }
 
-- (void)stopSupervising:(NSDictionary *)conf {
-	DPSupervisor *sv;
-	sv = [supervisors objectForKey:[conf objectForKey:@"localpath"]];
-	if (sv)
-		[sv cancel];
-	else
-		NSLog(@"warn: stopSupervising: no supervisor found for conf %@", conf);
+- (void)dirConfigWasCreated:(NSMutableDictionary *)conf {
+	#if DEBUG
+		NSLog(@"dirConfigWasCreated %@", conf);
+	#endif
+	if ([conf droPubConfIsEnabled] && [conf droPubConfIsComplete])
+		[self startSupervising:conf];
+	[conf updateIconOfDroPubConf];
+}
+
+- (void)dirConfigWasModified:(NSMutableDictionary *)newConf previous:(NSMutableDictionary *)oldConf {
+	// Note: oldDirConf MIGHT BE NULL if no "localpath" is set (it's the primary key)
+	#if DEBUG
+		NSLog(@"dirConfigWasModified %@ previous: %@", newConf, oldConf);
+	#endif
+	if (newConf && oldConf && [[newConf objectForKey:@"localpath"] compare:[oldConf objectForKey:@"localpath"]] != 0) {
+		[self stopSupervising:oldConf];
+		if ([newConf droPubConfIsEnabled] && [newConf droPubConfIsComplete])
+			[self startSupervising:newConf];
+	}
+	else if (newConf && !oldConf) {
+		if ([newConf droPubConfIsEnabled] && [newConf droPubConfIsComplete])
+			[self startSupervising:newConf];
+	}
+	else if (newConf && [newConf droPubConfIsEnabled]) {
+		if (![self supervisorForConf:oldConf] && [newConf droPubConfIsComplete])
+			[self startSupervising:newConf];
+		// If oldConf is already supervised, and conf becomes available, the 
+		// supervisior will resume automatically, thus the negative check.
+	}
+	[newConf updateIconOfDroPubConf];
+}
+
+- (void)dirConfigWasDeleted:(NSMutableDictionary *)conf {
+	#if DEBUG
+		NSLog(@"dirConfigWasDeleted %@", conf);
+	#endif
+	[self stopSupervising:conf];
+}
+
+- (DPSupervisor *)supervisorForConf:(NSDictionary *)conf {
+	return [supervisors objectForKey:[conf objectForKey:@"localpath"]];
 }
 
 - (DPSupervisor *)startSupervising:(NSDictionary *)dirConf {
@@ -197,13 +273,24 @@
 	return sv;
 }
 
+- (void)stopSupervising:(NSDictionary *)conf {
+	DPSupervisor *sv = [self supervisorForConf:conf];
+	if (sv)
+		[sv cancel];
+	else
+		NSLog(@"warn: stopSupervising: no supervisor found for conf %@", conf);
+}
+
 - (void)supervisedFilesInTransitDidChange:(DPSupervisor *)supervisor {
 	NSUInteger count = [supervisor.filesInTransit count];
 	if (count)
 		[statusItem setImage:[NSImage imageNamed:@"status-item-sending.png"]];
 	else
 		[statusItem setImage:[NSImage imageNamed:@"status-item-standby.png"]];
-	[statusItem setTitle:[NSString stringWithFormat:@"%u", count]];
+	if (count)
+		[statusItem setTitle:[NSString stringWithFormat:@"%u", count]];
+	else
+		[statusItem setTitle:nil];
 }
 
 - (void)supervisorDidExit:(DPSupervisor *)sv {
@@ -211,6 +298,5 @@
 	if ([supervisors objectForKey:pk])
 		[supervisors removeObjectForKey:pk];
 }
-
 
 @end

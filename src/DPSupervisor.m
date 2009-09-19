@@ -27,7 +27,7 @@
 
 - (BOOL)trashOrRemoveFileAtPath:(NSString *)path {
 	if (FSPathMoveObjectToTrashSync([path UTF8String], NULL, kFSFileOperationSkipPreflight) != 0) {
-		NSLog(@"failed to move %@ to trash -- removing it directly", path);
+		NSLog(@"[%@] failed to move %@ to trash -- removing it directly", self, path);
 		if (![fm removeItemAtPath:path error:NULL]) {
 			return NO;
 		}
@@ -69,7 +69,8 @@
 	[currentSendOperations removeObject:op];
 	// we're safe to rm the file
 	if (![self trashOrRemoveFileAtPath:path]) {
-		NSLog(@"failed to remove %@! -- terminating since somethings seriously fucked up", path);
+		NSLog(@"[%@] failed to remove %@! -- terminating since somethings seriously fucked up",
+			  self, path);
 		[NSApp terminate:self];
 	}
 	[self setPath:path inTransit:NO];
@@ -97,26 +98,33 @@
 
 
 - (void)main {
-	NSLog(@"%@ starting", self);
+	NSLog(@"[%@] starting", self);
 	NSString *filename, *path;
 	NSDirectoryEnumerator *dirEnum;
 	filesInTransit = [NSMutableSet set];
 	
-	while (!self.isCancelled) {
-#if DEBUG
-		NSLog(@"checking %@ (%u files in transit)", qdir, [filesInTransit count]);
-#endif
-		dirEnum = [fm enumeratorAtPath:qdir];
-		while (filename = [dirEnum nextObject]) {
-			if (![filename hasPrefix:@"."]) {
-				path = [[qdir stringByAppendingPathComponent:filename] stringByStandardizingPath];
-				if (![filesInTransit containsObject:path])
-					[self sendFile:path name:filename];
+	while ( !self.isCancelled && conf ) {
+		if (![conf droPubConfIsComplete]) {
+			#if DEBUG
+				NSLog(@"[%@] idling at %@ (incomplete configuration)", self, qdir);
+			#endif
+		}
+		else if ([conf droPubConfIsEnabled]) {
+			#if DEBUG
+				NSLog(@"[%@] checking %@ (%u files in transit)", self, qdir, [filesInTransit count]);
+			#endif
+			dirEnum = [fm enumeratorAtPath:qdir];
+			while (filename = [dirEnum nextObject]) {
+				if (![filename hasPrefix:@"."]) {
+					path = [[qdir stringByAppendingPathComponent:filename] stringByStandardizingPath];
+					if (![filesInTransit containsObject:path])
+						[self sendFile:path name:filename];
+				}
 			}
 		}
 		sleep(1);
 	}
-	NSLog(@"%@ cancelled", self);
+	NSLog(@"[%@] ended", self);
 	if (delegate && [delegate respondsToSelector:@selector(supervisorDidExit:)])
 		[delegate supervisedFilesInTransitDidChange:self];
 }
