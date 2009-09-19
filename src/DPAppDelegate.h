@@ -16,12 +16,12 @@
 	NSMutableDictionary *_dirConfPrevState;
 	NSMutableDictionary *supervisors;
 	NSArray *dirFields;
-	BOOL showInMenuBar, showQueueCountInMenuBar;
+	BOOL showInDock, showInMenuBar, showQueueCountInMenuBar, paused;
 	NSUInteger currentNumberOfFilesInTransit;
 }
 
 @property(readonly) NSMutableArray *dirs;
-@property(assign) BOOL showInMenuBar, showQueueCountInMenuBar;
+@property(assign) BOOL showInDock, showInMenuBar, showQueueCountInMenuBar, paused;
 
 - (BOOL)displayBrowseDialogForLocalPath;
 

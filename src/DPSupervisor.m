@@ -104,24 +104,31 @@
 	filesInTransit = [NSMutableSet set];
 	
 	while ( !self.isCancelled && conf ) {
-		if (![conf droPubConfIsComplete]) {
-			#if DEBUG
-				NSLog(@"[%@] idling at %@ (incomplete configuration)", self, qdir);
-			#endif
-		}
-		else if ([conf droPubConfIsEnabled]) {
-			#if DEBUG
-				NSLog(@"[%@] checking %@ (%u files in transit)", self, qdir, [filesInTransit count]);
-			#endif
-			dirEnum = [fm enumeratorAtPath:qdir];
-			while (filename = [dirEnum nextObject]) {
-				if (![filename hasPrefix:@"."]) {
-					path = [[qdir stringByAppendingPathComponent:filename] stringByStandardizingPath];
-					if (![filesInTransit containsObject:path])
-						[self sendFile:path name:filename];
+		if (!app.paused) {
+			if (![conf droPubConfIsComplete]) {
+				#if DEBUG
+					NSLog(@"[%@] idling (incomplete configuration)", self);
+				#endif
+			}
+			else if ([conf droPubConfIsEnabled]) {
+				#if DEBUG
+					NSLog(@"[%@] checking %@ (%u files in transit)", self, qdir, [filesInTransit count]);
+				#endif
+				dirEnum = [fm enumeratorAtPath:qdir];
+				while (filename = [dirEnum nextObject]) {
+					if (![filename hasPrefix:@"."]) {
+						path = [[qdir stringByAppendingPathComponent:filename] stringByStandardizingPath];
+						if (![filesInTransit containsObject:path])
+							[self sendFile:path name:filename];
+					}
 				}
 			}
 		}
+		#if DEBUG
+		else {
+			NSLog(@"[%@] idling (app.paused == true)", self);
+		}
+		#endif
 		sleep(1);
 	}
 	NSLog(@"[%@] ended", self);

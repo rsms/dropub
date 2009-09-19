@@ -13,6 +13,8 @@
 #pragma mark Initialization & setup
 
 - (id)init {
+	NSNumber *n;
+	
 	self = [super init];
 	
 	// init members
@@ -20,10 +22,22 @@
 	currentNumberOfFilesInTransit = 0;
 	
 	// read general settings from defaults
-	NSNumber *n = [defaults objectForKey:@"showInMenuBar"];
-	showInMenuBar = (!n || [n boolValue]);
+	n = [defaults objectForKey:@"showInMenuBar"];
+	showInMenuBar = (!n || [n boolValue]); // default YES
 	n = [defaults objectForKey:@"showQueueCountInMenuBar"];
-	showQueueCountInMenuBar = (!n || [n boolValue]);
+	showQueueCountInMenuBar = (n && [n boolValue]); // default NO
+	n = [defaults objectForKey:@"paused"];
+	paused = (n && [n boolValue]); // default NO
+	
+	// read showInDock
+	showInDock = YES;
+	NSMutableDictionary *infoPlist = [NSMutableDictionary dictionaryWithContentsOfFile:[[[NSBundle mainBundle] bundlePath] stringByAppendingPathComponent:@"Contents/Info.plist"]];
+	n = [infoPlist objectForKey:@"LSUIElement"];
+	if (n) showInDock = ![n boolValue];
+	
+	// prevent lock-out state
+	if (!showInDock && !showInMenuBar)
+		self.showInMenuBar = YES;
 	
 	// read dirs from defaults
 	dirs = [defaults objectForKey:@"directories"];
@@ -60,14 +74,31 @@
 }
 
 #pragma mark -
-#pragma mark Custom properties
+#pragma mark Properties
+
+- (BOOL)showInDock {
+	return showInDock;
+}
+
+- (void)setShowInDock:(BOOL)y {
+	#if DEBUG
+	NSLog(@"showInDock = %d", y);
+	#endif
+	showInDock = y;
+	NSString *infoPlistPath = [[[NSBundle mainBundle] bundlePath] stringByAppendingPathComponent:@"Contents/Info.plist"];
+	NSMutableDictionary *infoPlist = [NSMutableDictionary dictionaryWithContentsOfFile:infoPlistPath];
+	[infoPlist setObject:[NSNumber numberWithBool:!showInDock] forKey:@"LSUIElement"];
+	[infoPlist writeToFile:infoPlistPath atomically:YES];
+}
 
 - (BOOL)showInMenuBar {
 	return showInMenuBar;
 }
 
 - (void)setShowInMenuBar:(BOOL)y {
-	NSLog(@"setShowInMenuBar = %d", y);
+	#if DEBUG
+	NSLog(@"showInMenuBar = %d", y);
+	#endif
 	showInMenuBar = y;
 	[statusItem setEnabled:showInMenuBar];
 	[defaults setBool:showInMenuBar forKey:@"showInMenuBar"];
@@ -79,77 +110,26 @@
 }
 
 - (void)setShowQueueCountInMenuBar:(BOOL)y {
+	#if DEBUG
 	NSLog(@"showQueueCountInMenuBar = %d", y);
+	#endif
 	showQueueCountInMenuBar = y;
 	[defaults setBool:showQueueCountInMenuBar forKey:@"showQueueCountInMenuBar"];
 	[self updateMenuItem:self];
 }
 
-#pragma mark -
-#pragma mark NSApplication delegate methods
-
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-	// setup supervisors for saved dirconfs
-	for (NSMutableDictionary *conf in dirs) {
-		if ([conf droPubConfIsEnabled] && [conf droPubConfIsComplete])
-			[self startSupervising:conf];
-	}
-	
-	// first launch or no dirconfs? -- show config window
-	if ([dirs count] == 0)
-		[self orderFrontFoldersSettingsWindow:self];
-#if DEBUG
-	NSLog(@"dirs = %@", dirs);
-#endif
+- (BOOL)paused {
+	return paused;
 }
 
-
-- (void)applicationWillTerminate:(NSNotification *)aNotification {
-	[self saveState:self];
+- (void)setPaused:(BOOL)y {
+	#if DEBUG
+		NSLog(@"paused = %d", y);
+	#endif
+	paused = y;
+	[defaults setBool:paused forKey:@"paused"];
 }
 
-
-#pragma mark -
-#pragma mark NSToolbar delegate methods
-
-- (NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)_toolbar {
-	return [NSArray arrayWithObjects:
-		DPToolbarFoldersItemIdentifier,
-		DPToolbarSettingsItemIdentifier,
-		NSToolbarFlexibleSpaceItemIdentifier,
-		NSToolbarSpaceItemIdentifier,
-		NSToolbarSeparatorItemIdentifier, nil];
-}
-
-- (NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar *)_toolbar {
-	return [NSArray arrayWithObjects:DPToolbarFoldersItemIdentifier, DPToolbarSettingsItemIdentifier, nil];	
-}
-
-- (NSArray *)toolbarSelectableItemIdentifiers:(NSToolbar *)_toolbar {
-	return [self toolbarDefaultItemIdentifiers:_toolbar];
-}
-
-- (NSToolbarItem *)toolbar:(NSToolbar *)_toolbar itemForItemIdentifier:(NSString *)itemIdentifier willBeInsertedIntoToolbar:(BOOL)flag
-{
-	NSToolbarItem *item = nil;
-	if (itemIdentifier == DPToolbarFoldersItemIdentifier) {
-		item = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
-		[item setImage:[[NSWorkspace sharedWorkspace] iconForFile:@"/System/Library/Caches"]];
-		[item setLabel:@"Folders"];
-		[item setToolTip:@"Manage watched folders"];
-		[item setTarget:self];
-		[item setAction:@selector(displayViewForFoldersSettings:)];
-	}
-	else if (itemIdentifier == DPToolbarSettingsItemIdentifier) {
-		item = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
-		[item setImage:[NSImage imageNamed:@"NSPreferencesGeneral"]];
-		[item setLabel:@"General"];
-		[item setToolTip:@"Optional settings"];
-		[item setTarget:self];
-		[item setAction:@selector(displayViewForAdvancedSettings:)];
-	}
-	return item;
-}
 
 #pragma mark -
 #pragma mark Actions
@@ -222,6 +202,7 @@
 
 - (IBAction)orderFrontFoldersSettingsWindow:(id)sender {
 	[self displayViewForFoldersSettings:sender];
+	[toolbar setSelectedItemIdentifier:DPToolbarFoldersItemIdentifier];
 	[self orderFrontSettingsWindow:sender];
 }
 
@@ -274,6 +255,73 @@
 	[dirConfArrayController add:sender];
 	if (![self displayBrowseDialogForLocalPath])
 		[dirConfArrayController remove:sender];
+}
+
+
+#pragma mark -
+#pragma mark NSApplication delegate methods
+
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+	// setup supervisors for saved dirconfs
+	for (NSMutableDictionary *conf in dirs) {
+		if ([conf droPubConfIsEnabled] && [conf droPubConfIsComplete])
+			[self startSupervising:conf];
+	}
+	
+	// first launch or no dirconfs? -- show config window
+	if ([dirs count] == 0)
+		[self orderFrontFoldersSettingsWindow:self];
+#if DEBUG
+	NSLog(@"dirs = %@", dirs);
+#endif
+}
+
+
+- (void)applicationWillTerminate:(NSNotification *)aNotification {
+	[self saveState:self];
+}
+
+
+#pragma mark -
+#pragma mark NSToolbar delegate methods
+
+- (NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)_toolbar {
+	return [NSArray arrayWithObjects:
+		DPToolbarFoldersItemIdentifier,
+		DPToolbarSettingsItemIdentifier,
+		NSToolbarFlexibleSpaceItemIdentifier,
+		NSToolbarSpaceItemIdentifier,
+		NSToolbarSeparatorItemIdentifier, nil];
+}
+
+- (NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar *)_toolbar {
+	return [NSArray arrayWithObjects:DPToolbarFoldersItemIdentifier, DPToolbarSettingsItemIdentifier, nil];	
+}
+
+- (NSArray *)toolbarSelectableItemIdentifiers:(NSToolbar *)_toolbar {
+	return [self toolbarDefaultItemIdentifiers:_toolbar];
+}
+
+- (NSToolbarItem *)toolbar:(NSToolbar *)_toolbar itemForItemIdentifier:(NSString *)itemIdentifier willBeInsertedIntoToolbar:(BOOL)flag
+{
+	NSToolbarItem *item = nil;
+	if (itemIdentifier == DPToolbarFoldersItemIdentifier) {
+		item = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
+		[item setImage:[[NSWorkspace sharedWorkspace] iconForFile:@"/System/Library/Caches"]];
+		[item setLabel:@"Folders"];
+		[item setToolTip:@"Manage watched folders"];
+		[item setTarget:self];
+		[item setAction:@selector(displayViewForFoldersSettings:)];
+	}
+	else if (itemIdentifier == DPToolbarSettingsItemIdentifier) {
+		item = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
+		[item setImage:[NSImage imageNamed:@"NSPreferencesGeneral"]];
+		[item setLabel:@"General"];
+		[item setToolTip:@"Optional settings"];
+		[item setTarget:self];
+		[item setAction:@selector(displayViewForAdvancedSettings:)];
+	}
+	return item;
 }
 
 
