@@ -15,7 +15,7 @@
 @end
 
 @protocol DPSEndFileOPDelegate
-- (void)fileTransmission:(DPSendFileOp *)op didSucceedForPath:(NSString *)path;
+- (void)fileTransmission:(DPSendFileOp *)op didSucceedForPath:(NSString *)path remoteURI:(NSString *)hostpath;
 - (void)fileTransmission:(DPSendFileOp *)op didAbortForPath:(NSString *)path;
 - (void)fileTransmission:(DPSendFileOp *)op didFailForPath:(NSString *)path reason:(NSError *)error;
 @end

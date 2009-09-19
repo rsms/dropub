@@ -35,6 +35,7 @@
 		3A919A57106586E4002D0F4B /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A919A56106586E4002D0F4B /* Sparkle.framework */; };
 		3A919A621065874D002D0F4B /* Sparkle.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 3A919A56106586E4002D0F4B /* Sparkle.framework */; };
 		3A919A8C106590CC002D0F4B /* dsa_pub.pem in Resources */ = {isa = PBXBuildFile; fileRef = 3A919A8B106590CC002D0F4B /* dsa_pub.pem */; };
+		3A919AA3106599EE002D0F4B /* SSYLoginItems.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A919AA1106599EE002D0F4B /* SSYLoginItems.m */; };
 		3A9D29D1106194D3008923FD /* DPSupervisor.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A9D29D0106194D3008923FD /* DPSupervisor.m */; };
 		3A9D29E110619EC9008923FD /* DPSendFileOp.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A9D29E010619EC9008923FD /* DPSendFileOp.m */; };
 		3A9D2A5E1061B083008923FD /* status-item-standby.png in Resources */ = {isa = PBXBuildFile; fileRef = 3A9D2A5B1061B083008923FD /* status-item-standby.png */; };
@@ -96,6 +97,8 @@
 		3A919A0310657FF0002D0F4B /* NSString+DPAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSString+DPAdditions.m"; path = "src/NSString+DPAdditions.m"; sourceTree = "<group>"; };
 		3A919A56106586E4002D0F4B /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Sparkle.framework; path = frameworks/Sparkle.framework; sourceTree = "<group>"; };
 		3A919A8B106590CC002D0F4B /* dsa_pub.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = dsa_pub.pem; path = resources/dsa_pub.pem; sourceTree = "<group>"; };
+		3A919AA1106599EE002D0F4B /* SSYLoginItems.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SSYLoginItems.m; path = src/SSYLoginItems.m; sourceTree = "<group>"; };
+		3A919AA2106599EE002D0F4B /* SSYLoginItems.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SSYLoginItems.h; path = src/SSYLoginItems.h; sourceTree = "<group>"; };
 		3A9D29CF106194D3008923FD /* DPSupervisor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPSupervisor.h; path = src/DPSupervisor.h; sourceTree = "<group>"; };
 		3A9D29D0106194D3008923FD /* DPSupervisor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPSupervisor.m; path = src/DPSupervisor.m; sourceTree = "<group>"; };
 		3A9D29DF10619EC9008923FD /* DPSendFileOp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPSendFileOp.h; path = src/DPSendFileOp.h; sourceTree = "<group>"; };
@@ -187,6 +190,8 @@
 				3A91998810657080002D0F4B /* NSTask+DpAdditions.m */,
 				3A919A0210657FF0002D0F4B /* NSString+DPAdditions.h */,
 				3A919A0310657FF0002D0F4B /* NSString+DPAdditions.m */,
+				3A919AA2106599EE002D0F4B /* SSYLoginItems.h */,
+				3A919AA1106599EE002D0F4B /* SSYLoginItems.m */,
 			);
 			name = src;
 			sourceTree = "<group>";
@@ -303,6 +308,7 @@
 				3A91991E1065620D002D0F4B /* NSError+DPAdditions.m in Sources */,
 				3A91998910657080002D0F4B /* NSTask+DpAdditions.m in Sources */,
 				3A919A0410657FF0002D0F4B /* NSString+DPAdditions.m in Sources */,
+				3A919AA3106599EE002D0F4B /* SSYLoginItems.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

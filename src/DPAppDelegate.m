@@ -1,5 +1,6 @@
 #import "DPAppDelegate.h"
 #import "DPSupervisor.h"
+#import "SSYLoginItems.h"
 
 /*@interface NSStatusBar (Unofficial)
 -(id)_statusItemWithLength:(float)f withPriority:(int)d;
@@ -42,6 +43,10 @@
 	if (!showInDock && !showInMenuBar)
 		self.showInMenuBar = YES;
 	
+	// set openAtLogin to YES by default
+	if (!openAtLogin && ![defaults objectForKey:@"openAtLoginIsSet"])
+		[self setOpenAtLogin:YES];
+	
 	// read dirs from defaults
 	dirs = [defaults objectForKey:@"directories"];
 	if (!dirs || ![dirs respondsToSelector:@selector(objectAtIndex:)]) {
@@ -78,6 +83,29 @@
 
 #pragma mark -
 #pragma mark Properties
+
+- (BOOL)openAtLogin {
+	NSError *error = nil;
+	NSURL *bundleURL = [[NSURL alloc] initFileURLWithPath:[[NSBundle mainBundle] bundlePath] isDirectory:YES];
+	NSNumber *isLoginItem = nil;
+	NSNumber *isHidden = nil;
+	if ([SSYLoginItems isURL:bundleURL loginItem:&isLoginItem hidden:&isHidden error:&error])
+		openAtLogin = [isLoginItem boolValue];
+	// else discard error
+	return openAtLogin;
+}
+
+- (void)setOpenAtLogin:(BOOL)y {
+	NSError *error = nil;
+	openAtLogin = y;
+	if ([SSYLoginItems synchronizeLoginItemPath:[[NSBundle mainBundle] bundlePath] shouldBeLoginItem:openAtLogin setHidden:NO error:&error] == SSYSharedFileListResultFailed)
+	{
+		[[NSAlert alertWithError:error] runModal];
+	}
+	else {
+		[defaults setBool:YES forKey:@"openAtLoginIsSet"];
+	}
+}
 
 - (BOOL)showInDock {
 	return showInDock;

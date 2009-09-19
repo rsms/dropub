@@ -109,8 +109,6 @@
 	#if DEBUG
 	NSLog(@"[%@] sending %@ --> %@:%@", self, path, dstHost, dstPath);
 	NSLog(@"[%@] starting task: %@ %@", self, scpPath, [[args description] stringByReplacingOccurrencesOfString:@"\n" withString:@" "]);
-	#else
-	NSLog(@"[%@] sending %@ --> %@:%@ (atomically)", self, path, dstHost, dstPathFinal);
 	#endif
 	
 	// todo use popen or NSTask so we can send cancel signal to our child process
@@ -213,8 +211,8 @@
 		#endif
 		
 		// inform delegate
-		if (delegate && [delegate respondsToSelector:@selector(fileTransmission:didSucceedForPath:)])
-			[delegate fileTransmission:self didSucceedForPath:path];
+		if (delegate && [delegate respondsToSelector:@selector(fileTransmission:didSucceedForPath:remoteURI:)])
+			[delegate fileTransmission:self didSucceedForPath:path remoteURI:[NSString stringWithFormat:@"%@:%@", dstHost, dstPath]];
 		#if DEBUG
 		else if (delegate)
 			NSLog(@"[%@] warn: delegate not responding to fileTransmission:didSucceedForPath:");

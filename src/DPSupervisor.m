@@ -58,7 +58,7 @@
 }
 
 
-- (void)fileTransmission:(DPSendFileOp *)op didSucceedForPath:(NSString *)path {
+- (void)fileTransmission:(DPSendFileOp *)op didSucceedForPath:(NSString *)path remoteURI:(NSString *)remoteURI {
 	[currentSendOperations removeObject:op];
 	// we're safe to rm the file
 	if (![self trashOrRemoveFileAtPath:path]) {
@@ -67,6 +67,8 @@
 		[NSApp terminate:self];
 	}
 	[self setPath:path inTransit:NO];
+	// pretty log
+	NSLog(@"sent %@ --> %@", path, remoteURI);
 }
 
 

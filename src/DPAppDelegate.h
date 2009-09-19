@@ -18,13 +18,13 @@
 	NSMutableDictionary *_dirConfPrevState;
 	NSMutableDictionary *supervisors;
 	NSArray *dirFields;
-	BOOL showInDock, showInMenuBar, showQueueCountInMenuBar, paused;
+	BOOL openAtLogin, showInDock, showInMenuBar, showQueueCountInMenuBar, paused;
 	NSUInteger currentNumberOfFilesInTransit;
 	NSUInteger maxNumberOfConcurrentSendOperationsPerFolder;
 }
 
 @property(readonly) NSMutableArray *dirs;
-@property(assign) BOOL showInDock, showInMenuBar, showQueueCountInMenuBar, paused;
+@property(assign) BOOL openAtLogin, showInDock, showInMenuBar, showQueueCountInMenuBar, paused;
 @property(assign) NSUInteger maxNumberOfConcurrentSendOperationsPerFolder;
 
 - (BOOL)displayBrowseDialogForLocalPath;
