@@ -106,6 +106,27 @@
 	nil];
 	
 	
+	/*
+	 
+	 Todo: look at password auth using simulated TTY. Maybe by using
+	       termios.h or simply ioctl:
+	 
+	 #include <stdio.h>
+	 #include <stdlib.h>
+	 #include <fcntl.h>
+	 #include <sys/ioctl.h>
+	 int main (int argc, char *argv[]) {
+		 char *cmd, *nl = "\n";
+		 int i, fd = 0;
+		 if (argc > 1) { cmd = argv[1]; } else { cmd = "ls"; }
+		 for (i = 0; cmd[i]; i++)
+			ioctl (fd, TIOCSTI, cmd+i);
+		 ioctl (fd, TIOCSTI, nl);
+		 exit (0);
+	 }
+	 
+	*/
+	
 	#if DEBUG
 	NSLog(@"[%@] sending %@ --> %@:%@", self, path, dstHost, dstPath);
 	NSLog(@"[%@] starting task: %@ %@", self, scpPath, [[args description] stringByReplacingOccurrencesOfString:@"\n" withString:@" "]);
