@@ -68,8 +68,6 @@ elif newsig in re.findall(r'sparkle:dsaSignature="([^"]+)"', APPCAST):
   sys.exit(1)
 
 APPCAST = re.compile(r'(\n[ \r\n\t]*</channel>)', re.M).sub(ITEM.rstrip()+r'\1', APPCAST)
-APPCAST = re.compile(r'^\t\t<pubDate>([^<]*)</pubDate>', re.M).sub('\t\t<pubDate>$PUBDATE</pubDate>', APPCAST)
-APPCAST = re.compile(r'^\t\t<lastBuildDate>([^<]*)</lastBuildDate>', re.M).sub('\t\t<lastBuildDate>$PUBDATE</lastBuildDate>', APPCAST)
 open('$WD/admin/appcast.xml','w').write(APPCAST)
 EOF
 
