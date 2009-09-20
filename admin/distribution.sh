@@ -116,7 +116,7 @@ mate -a <<EOF
 
 3. Commit, tag and push the source
 
-	git ci 'Release $VERSION'
+	git ci 'Release $VERSION' -a
 	git tag -m 'Release $VERSION' 'v$VERSION'
 	git pu
 

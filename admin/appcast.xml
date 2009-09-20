@@ -5,5 +5,17 @@
 		<link>http://github.com/rsms/dropub</link>
 		<description>Appcast for DroPub updates</description>
 		<language>en</language>
+		<item>
+			<title>Version 1.0</title>
+			<sparkle:releaseNotesLink>http://hunch.se/dropub/release-notes.html#version-1.0</sparkle:releaseNotesLink>
+			<pubDate>Sun, 20 Sep 2009 02:15:05 +0200</pubDate>
+			<enclosure
+				url="http://hunch.se/dropub/dist/dropub-1.0.zip"
+				sparkle:version="1.0"
+				type="application/octet-stream"
+				length="678569"
+				sparkle:dsaSignature="MCwCFG03uOE/11PTIVuyI9N7v3jZNdKyAhRBxsjQE7BlOZhwmpZsE4FHPAxQxg=="
+			/>
+		</item>
 	</channel>
 </rss>
