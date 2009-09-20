@@ -6,7 +6,7 @@ Drop and publish -- create drop boxes which you can drop files into. The files a
 
 [<img src="http://github.com/rsms/dropub/raw/master/admin/icon.png" width="128" alt="DroPub icon" align="right" />](http://hunch.se/dropub/dist/dropub-1.0.zip)
 
-Lastes release: [DroPub 1.0](http://hunch.se/dropub/dist/dropub-1.0.zip)
+Latest release: [DroPub 1.0](http://hunch.se/dropub/dist/dropub-1.0.zip)
 
 ## Screenshots
 
