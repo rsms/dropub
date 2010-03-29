@@ -61,26 +61,47 @@
 	NSArray *args;
 	NSError *error = nil;
 	int status;
+	NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
+	NSFileManager *fm = [NSFileManager defaultManager];
 	
-	scpPath = [[NSUserDefaults standardUserDefaults] stringForKey:@"scpPath"];
-	if (!scpPath || [[NSFileManager defaultManager] fileExistsAtPath:scpPath])
+	scpPath = [ud stringForKey:@"scpPath"];
+	if (!scpPath || [fm fileExistsAtPath:scpPath])
 		scpPath = @"/usr/bin/scp";
 	
 	#if DEBUG
 	NSLog(@"[%@] starting with conf %@", self, conf);
 	#endif
 	
+	if ([ud boolForKey:@"preUploadSetModeEnabled"] || [ud objectForKey:@"preUploadSetModeEnabled"] == nil) {
+		// TODO: this is an ugly hack. FIXME
+		NSMutableString *cmd = [NSMutableString stringWithString:@"chmod g="];
+		if ([ud boolForKey:@"preUploadSetModeGR"] || [ud objectForKey:@"preUploadSetModeGR"] == nil)
+			[cmd appendString:@"r"];
+		if ([ud boolForKey:@"preUploadSetModeGW"]) [cmd appendString:@"w"];
+		if ([ud boolForKey:@"preUploadSetModeGX"]) [cmd appendString:@"x"];
+		[cmd appendString:@",o="];
+		if ([ud boolForKey:@"preUploadSetModeOR"] || [ud objectForKey:@"preUploadSetModeOR"] == nil)
+			[cmd appendString:@"r"];
+		if ([ud boolForKey:@"preUploadSetModeOW"]) [cmd appendString:@"w"];
+		if ([ud boolForKey:@"preUploadSetModeOX"]) [cmd appendString:@"x"];
+		NSLog(@"[%@] modify file mode: chmod %@ '%@'", self, cmd, path);
+		[cmd appendString:@" '"];
+		[cmd appendString:path];
+		[cmd appendString:@"'"];
+		int ec = system([cmd UTF8String]);
+		if (ec !=0) {
+			NSLog(@"[%@] warning: failed to set file mode -- chmod %@ '%@' --> %d",
+				self, cmd, path, ec);
+		}
+	}
+	
 	if (!(dstHost = [conf objectForKey:@"remoteHost"])) {
-		#if DEBUG
 		NSLog(@"[%@] missing 'remoteHost' in config -- aborting", self);
-		#endif
 		error = [NSError droPubErrorWithDescription:@"missing 'remoteHost' in config"];
 		goto fail;
 	}
 	if ([dstHost length] < 1) {
-		#if DEBUG
 		NSLog(@"[%@] empty 'remoteHost' in config -- aborting", self);
-		#endif
 		error = [NSError droPubErrorWithDescription:@"empty 'remoteHost' in config"];
 		goto fail;
 	}
